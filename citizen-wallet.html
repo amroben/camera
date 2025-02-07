@@ -9,10 +9,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-
-
   <title>المحفظة الإلكترونية للمواطن</title>
-
 </head>
 <body>
   <div class="container">
@@ -28,11 +25,9 @@
                 <li><a href="#" data-section="trackdocuments"><i class="fas fa-search"></i> تتبع وثائق</a></li>
                 <li><a href="#" data-section="settings"><i class="fas fa-cog"></i> إعدادات</a></li>
                <li><a  onclick="logOut()"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</a></li>
-
             </ul>
         </nav>
     </aside>
-
     <main class="main-content">
       <div class="mobile-user-info">
         <i class=" user-icon"><img width="20px" src="image.png"></i>
@@ -52,13 +47,11 @@
         <li><a  onclick="logOut()"><i class="fas fa-sign-out-alt"></i> </a></li>
     </ul>
 </nav>
-
 <!-- نافذة مسح QR -->
 <div id="qrScannerPopup" class="popup" style="display: none;">
   <div class="popup-content">
-    <span class="close-btn" id="closeQrScanner" style="z-index:1000000;">&times;</span>
+    <span class="close-btn" id="closeQrScanner">&times;</span>
     <h3>مسح QR</h3>
-    <h3>nn QR</h3>
     <div id="qrScanner"></div> <!-- هنا سيتم عرض الكاميرا -->
   </div>
 </div>
