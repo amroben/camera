@@ -333,6 +333,22 @@ async function requestCameraPermission() {
     return false
   }
 }
+async function closeQrScannerPopup() {
+  const qrScannerPopup = document.getElementById("qrScannerPopup");
+  if (qrScannerPopup) {
+    qrScannerPopup.style.display = "none";
+  }
+
+  try {
+    if (qrScanner && qrScanner.isScanning) {
+      await qrScanner.stop();
+      qrScanner.clear();
+      console.log("تم إيقاف الماسح بنجاح");
+    }
+  } catch (err) {
+    console.error("خطأ أثناء إيقاف الماسح:", err);
+  }
+}
 
 async function openQrScanner() {
   const qrScannerPopup = document.getElementById("qrScannerPopup")
@@ -435,22 +451,6 @@ const walletAddressInput = document.getElementById("recipientWalletAddress")
 
 let qrScanner // Global variable for QR scanner
 
-async function closeQrScannerPopup() {
-  const qrScannerPopup = document.getElementById("qrScannerPopup");
-  if (qrScannerPopup) {
-    qrScannerPopup.style.display = "none";
-  }
-
-  try {
-    if (qrScanner && qrScanner.isScanning) {
-      await qrScanner.stop();
-      qrScanner.clear();
-      console.log("تم إيقاف الماسح بنجاح");
-    }
-  } catch (err) {
-    console.error("خطأ أثناء إيقاف الماسح:", err);
-  }
-}
 
 // Add event listener for closing QR scanner
 const closeQrScanner1 = document.getElementById("closeQrScanner")
