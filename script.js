@@ -1,3 +1,4 @@
+let qrScanner 
 document.addEventListener("DOMContentLoaded", () => {
   const navLinks = document.querySelectorAll("[data-section]")
   const content = document.getElementById("content")
@@ -433,7 +434,7 @@ const scanQrCodeBtn = document.getElementById("scanQrCodeBtn")
 const closeQrScanner = document.getElementById("closeQrScanner")
 const walletAddressInput = document.getElementById("recipientWalletAddress")
 
-let qrScanner // Global variable for QR scanner
+// Global variable for QR scanner
 
 async function closeQrScannerPopup() {
   const qrScannerPopup = document.getElementById("qrScannerPopup");
