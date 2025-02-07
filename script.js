@@ -372,7 +372,7 @@ async function openQrScanner() {
           const walletAddressInput = document.getElementById("recipientWalletAddress")
           if (walletAddressInput) {
             walletAddressInput.value = decodedText
-            
+
             closeQrScannerPopup()
           } else {
             console.error("Wallet address input not found")
@@ -436,18 +436,19 @@ const walletAddressInput = document.getElementById("recipientWalletAddress")
 let qrScanner // Global variable for QR scanner
 
 async function closeQrScannerPopup() {
-  const qrScannerPopup = document.getElementById("qrScannerPopup")
+  const qrScannerPopup = document.getElementById("qrScannerPopup");
   if (qrScannerPopup) {
-    qrScannerPopup.style.display = "none"
+    qrScannerPopup.style.display = "none";
   }
 
   try {
-    const qrScanner = new Html5Qrcode("qrScanner")
-    await qrScanner.stop()
-    qrScanner.clear()
-    console.log("تم إيقاف الماسح بنجاح")
+    if (qrScanner && qrScanner.isScanning) {
+      await qrScanner.stop();
+      qrScanner.clear();
+      console.log("تم إيقاف الماسح بنجاح");
+    }
   } catch (err) {
-    console.error("خطأ أثناء إيقاف الماسح:", err)
+    console.error("خطأ أثناء إيقاف الماسح:", err);
   }
 }
 
