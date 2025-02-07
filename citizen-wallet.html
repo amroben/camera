@@ -72,47 +72,6 @@
 <script src="script.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
-<script>
-  function    logOut() {
-      localStorage.removeItem('token');
-      localStorage.removeItem('userId');
-      window.location.href = 'login-admin.html';
-    }
-  window.onload = () => {
-  function checkAuth() {
-    const token = localStorage.getItem('token');
 
-    if (!token) {
-      window.location.href = 'login-admin.html'; // إعادة التوجيه إذا لم يكن هناك توكن
-      return;
-    }
-
-    try {
-      // فك التوكن والتحقق من الدور
-      const decoded = jwt_decode(token);
-      if (decoded.role !== 'citizen') {
-        window.location.href = 'dashboard.html'; // إعادة التوجيه إلى محفظة المواطن إذا لم يكن "admin"
-      }
-         // استخراج اسم المسؤول من التوكن وعرضه
-         const adminName = decoded.fullName ;
-         document.getElementById('adminName').textContent = adminName;
-         document.getElementById('adminName2').textContent = adminName;
-
-    } catch (error) {
-      console.error('خطأ في فك التوكن:', error);
-      localStorage.removeItem('token');
-      localStorage.removeItem('userId');
-      window.location.href = 'login-admin.html'; // إعادة التوجيه إذا كان هناك خطأ في التوكن
-    }
-  }
-  checkAuth();
-  setInterval(checkAuth, 3000);
-};
-window.addEventListener("storage", (event) => {
-    if (event.key === "token" && !event.newValue) {
-      window.location.href = "login-admin.html"; // إعادة التوجيه إذا تم حذف التوكن
-    }
-  });
-</script>
 </body>
 </html>
