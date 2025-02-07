@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة تحكم البلدية</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="bg-gray-100 font-sans">
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gray-800 text-white p-6">
+      <h2 class="text-2xl font-bold mb-6">لوحة تحكم البلدية</h2>
+      <nav>
+        <p style="text-align: center;">مرحبًا، <span  id="adminName">Admin</span> 👋</p><br>
+
+        <button onclick="render('citizens')" class="block w-full text-left py-2 px-4 hover:bg-gray-700 rounded transition">إدارة المواطنين🪪</button>
+        <button onclick="render('documents')" class="block w-full text-left py-2 px-4 hover:bg-gray-700 rounded transition">إدارة الوثائق📑</button>
+        <button onclick="render('requests')" class="block w-full text-left py-2 px-4 hover:bg-gray-700 rounded transition">إدارة الطلبات🛎</button>
+        <button onclick="render('settings')" class="block w-full text-left py-2 px-4 hover:bg-gray-700 rounded transition">الإعدادات⚙</button>
+      </nav>
+      <br>
+      <button onclick="logOut()" class="mt-auto w-full bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 transition">تسجيل الخروج&nbsp   ⏻</button>
+    </aside>
+    <!-- Main Content -->
+    <main class="flex-1 p-8 overflow-auto">
+      <div id="main-content"></div>
+    </main>
+  </div>
+  <!-- Add Citizen Modal -->
+  <div id="addCitizenModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+    <div class="bg-white p-8 rounded-lg w-96">
+      <h3 class="text-xl font-bold mb-4">إضافة مواطن جديد</h3>
+      <form id="addCitizenForm" class="space-y-4">
+        <div>
+          <label for="fullName" class="block mb-1">الاسم الكامل:</label>
+          <input type="text" id="fullName" name="fullName" required class="w-full p-2 border rounded">
+        </div>
+        <div>
+        <label class="block mb-2">نوع الوثيقة:</label>
+        <select id="role" class="w-full p-2 border rounded">
+            <option value="admin">admin</option>
+            <option value="citizen">citizen</option>
+        </select>
+        </div>
+        <div>
+          <label for="city" class="block mb-1">المدينة :</label>
+          <input type="text" id="city" name="city" required class="w-full p-2 border rounded bg-gray-100">
+        </div>
+        <div>
+          <label for="birth" class="block mb-1">تاريخ الميلاد :</label>
+          <input type="date" id="birth" name="birth" required class="w-full p-2 border rounded bg-gray-100">
+        </div>
+        <div>
+          <label for="email" class="block mb-1">البريد الإلكتروني:</label>
+          <input type="email" id="email" name="email" required class="w-full p-2 border rounded">
+        </div>
+        <div>
+          <label for="password" class="block mb-1">كلمة المرور:</label>
+          <input type="password" id="password" name="password" required class="w-full p-2 border rounded">
+        </div>
+        <div>
+          <label for="walletAddress" class="block mb-1">عنوان المحفظة:</label>
+          <input type="text" id="walletAddress" name="walletAddress" readonly class="w-full p-2 border rounded bg-gray-100">
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition">إلغاء</button>
+          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">إضافة المواطن</button>
+        </div>
+
+    </div>
+  </div>
+</div>
+  <script>
+  document.getElementById('addCitizenForm').addEventListener('submit', function(event) {
+  event.preventDefault(); // لمنع إرسال النموذج بالطريقة التقليدية
+
+  // توليد عنوان المحفظة
+  const randomWallet = '0x' + Math.random().toString(16).substr(2, 40);
+  document.getElementById('walletAddress').value = randomWallet;
+
+  // جمع البيانات من النموذج
+  const citizenData = {
+    fullName: document.getElementById('fullName').value,
+
+    email: document.getElementById('email').value,
+    password: document.getElementById('password').value,
+    city: document.getElementById('city').value,
+    birth: document.getElementById('birth').value,
+    role: document.getElementById('role').value,
+    walletAddress: randomWallet
+  };
+
+  // إرسال البيانات إلى الخادم باستخدام fetch
+  fetch('http://localhost:5000/api/auth/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(citizenData),
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.message === 'تم إنشاء الحساب بنجاح') {
+      alert('تم إضافة المواطن بنجاح');
+     closeModal(); // إغلاق النافذة بعد الإضافة
+     location.reload();
+    } else {
+      if (data.error && data.error.code === 11000) {
+        alert('البريد الإلكتروني موجود بالفعل!');
+      } else {
+        alert('فشل في إضافة المواطن');
+      }
+
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('حدث خطأ أثناء إضافة المواطن');
+  });
+});
+
+  </script>
+  <!-- Confirm Delete Modal -->
+  <div id="confirmDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+    <div class="bg-white p-8 rounded-lg w-96">
+      <h3 class="text-xl font-bold mb-4">تأكيد الحذف</h3>
+      <p class="mb-4">هل أنت متأكد من أنك تريد حذف هذا المواطن؟</p>
+      <div class="flex justify-end space-x-2">
+        <button onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition">لا</button>
+        <button onclick="deleteCitizen()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition">نعم</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Dashboard functionality
+    const dashboard = {
+      logOut() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        window.location.href = 'login-admin.html';
+      },
+
+      openModal(modalId) {
+        document.getElementById(modalId).classList.remove('hidden');
+        document.getElementById(modalId).classList.add('flex');
+      },
+
+      closeModal(modalId) {
+        document.getElementById(modalId).classList.remove('flex');
+        document.getElementById(modalId).classList.add('hidden');
+      },
+
+      render(section) {
+        const content = {
+          citizens: `
+            <h3 class="text-2xl font-bold mb-4">👤إدارة المواطنين</h3>
+            <button onclick="dashboard.openModal('addCitizenModal')" class="mb-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">إضافة مواطن جديد</button>
+            <div>
+              <input type="text" id="searchCitizens" placeholder="بحث عن المواطن" onkeyup="dashboard.searchCitizens()" class="w-full p-2 mb-4 border rounded">
+              <table id="citizensTable" class="w-full border-collapse">
+                <thead>
+                  <tr class="bg-gray-200">
+                    <th class="p-2 text-right">الاسم</th>
+                    <th class="p-2 text-right">البريد الإلكتروني</th>
+                    <th class="p-2 text-right">عنوان المحفظة</th>
+                    <th class="p-2 text-right">المدينة </th>
+                    <th class="p-2 text-right">تاريخ الميلاد </th>
+                    <th class="p-2 text-right">الدور</th>
+                    <th class="p-2 text-right">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody >
+
+                </tbody>
+              </table>
+            </div>
+          `,
+          documents: `
+            <h3 class="text-2xl font-bold mb-4">📄إدارة الوثائق</h3>
+<!-- زر إصدار وثيقة -->
+<button onclick="openModal1()" class="mb-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">
+    إصدار وثيقة جديدة
+</button>
+    <input type="text" id="searchd" placeholder="بحث عن وثيقة عبر عنوان المحفظة"
+onkeyup="dashboard.searchd()" class="w-full p-2 mb-4 border rounded">
+
+<!-- نموذج (Modal) إضافة وثيقة -->
+<div id="documentModall" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+        <h2 class="text-xl font-semibold mb-4">إصدار وثيقة جديدة</h2>
+
+        <!-- حقل اختيار نوع الوثيقة -->
+        <label class="block mb-2">نوع الوثيقة:</label>
+        <select id="documentType" class="w-full p-2 border rounded">
+            <option value="شهادة ميلاد">شهادة ميلاد</option>
+            <option value="شهادة إقامة">شهادة إقامة</option>
+            <option value="تصريح شرفي">تصريح شرفي</option>
+            <option value="شهادة عمل">شهادة عمل</option>
+        </select>
+
+        <!-- حقل اختيار اسم المواطن -->
+        <label class="block mt-4 mb-2">اسم المواطن:</label>
+        <input type="text" id="citizenFullName" class="w-full p-2 border rounded" placeholder="أدخل اسم المواطن" onfocus="loadCitizensList()" readonly>
+
+        <!-- قائمة المواطنين التي ستظهر عند الضغط في حقل اسم المواطن -->
+        <div id="citizenList" class="absolute w-full mt-1 bg-white border rounded shadow-lg hidden">
+            <!-- سيتم ملؤها عبر JavaScript -->
+        </div>
+ <label for="documentFile">رفع ملف الوثيقة (PDF فقط):</label>
+    <input type="file" id="documentFile" name="documentFile" accept="application/pdf" required>
+
+        <!-- حقل رقم هوية المواطن (سيتم ملؤه تلقائيًا عند اختيار المواطن) -->
+        <label class="block mt-4 mb-2">رقم هوية المواطن:</label>
+        <input type="text" id="citizenId" class="w-full p-2 border rounded" placeholder="رقم هوية المواطن" readonly>
+
+        <div class="flex justify-between mt-4">
+            <button onclick="issueDocument()" class="bg-blue-600 text-white px-4 py-2 rounded">إصدار</button>
+            <button onclick="closeModal1()" class="bg-red-600 text-white px-4 py-2 rounded">إغلاق</button>
+        </div>
+    </div>
+</div>
+
+
+
+</div>
+<table id="documentsTable" class="w-full border-collapse">
+    <thead>
+        <tr class="bg-gray-200">
+            <th class="p-2 text-right">نوع الوثيقة</th>
+            <th class="p-2 text-right">صاحب الوثيقة</th>
+            <th class="p-2 text-right"> عنوان المحفظة	 </th>
+            <th class="p-2 text-right">الإجراءات</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+          `,
+          requests: `
+          <h3 class="text-2xl font-bold mb-4">🔔إشعارات🔔</h3>
+
+<table class="w-full border-collapse">
+  <thead>
+    <tr class="bg-gray-200">
+
+    </tr>
+  </thead>
+  <tbody  id="req">
+
+  </tbody>
+</table>
+ `,
+          settings: `
+     <h3 class="text-2xl font-bold mb-4">الإعدادات</h3>
+<div class="space-y-4">
+  <div>
+    <label for="currentPassword" class="block mb-2">كلمة المرور الحالية</label>
+    <input type="password" id="currentPassword" class=" p-2 border rounded" >
+  </div>
+  <div>
+    <label for="newPassword" class="block mb-2">كلمة المرور الجديدة</label>
+    <input type="password" id="newPassword" class=" p-2 border rounded" >
+  </div>
+  <div>
+    <label for="confirmNewPassword" class="block mb-2">تأكيد كلمة المرور الجديدة</label>
+    <input type="password" id="confirmNewPassword" class=" p-2 border rounded" >
+  </div>
+  <div>
+    <button id="changePasswordBtn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition" onclick="changePassword()">تغيير كلمة المرور</button>
+  </div>
+</div>
+`,
+        };
+
+        document.getElementById('main-content').innerHTML = content[section];
+      },
+
+      sendDocument(id) {
+        alert(`تم إرسال الوثيقة ${id}`);
+      },
+
+      deleteCitizen() {
+        alert('تم حذف المواطن');
+        dashboard.closeModal('confirmDeleteModal');
+      },
+
+      searchCitizens() {
+        const query = document.getElementById('searchCitizens').value.toLowerCase();
+        const rows = document.querySelectorAll('#citizensTable tbody tr');
+        rows.forEach(row => {
+          const name = row.cells[0].textContent.toLowerCase();
+          if (name.includes(query)) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+      }
+ };
+    dashboard.render('citizens');
+        // Global function aliases
+        function render(section) { dashboard.render(section); }
+    function logOut() { dashboard.logOut(); }
+    function openModal(modalId) { dashboard.openModal(modalId); }
+    function closeModal() { dashboard.closeModal('addCitizenModal'); }
+    function closeDeleteModal() { dashboard.closeModal('confirmDeleteModal'); }
+
+  </script>
+<script>
+ function changePassword() {
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+    const userId = localStorage.getItem('userId'); // استرجاع userId من localStorage
+
+    if (!userId) {
+        alert('تعذر العثور على معرف المستخدم، يرجى تسجيل الدخول مرة أخرى!');
+        return;
+    }
+
+    if (!currentPassword || !newPassword || !confirmNewPassword) {
+        alert('يرجى ملء جميع الحقول!');
+        return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+        alert('كلمة المرور الجديدة وتأكيدها غير متطابقين!');
+        return;
+    }
+
+    fetch('http://localhost:5000/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, currentPassword, newPassword })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+        } else {
+            alert(data.message); // عرض رسالة الخطأ
+        }
+    })
+    .catch(error => {
+        console.error('خطأ في تغيير كلمة المرور:', error);
+        alert('حدث خطأ أثناء تغيير كلمة المرور!');
+    });
+}
+  </script>
+  <script >
+      // التأكد من أن العنصر موجود في DOM قبل تنفيذ الكود
+      fetch('http://localhost:5000/api/auth/citizens')
+      .then(response => response.json())
+      .then(data => {
+        const citizensTable = document.querySelector('#citizensTable tbody');
+        citizensTable.innerHTML = ''; // تفريغ الجدول قبل إضافة البيانات
+        data.forEach((citizen) => {
+          const row = `<tr>
+            <td class='p-2 border'>${citizen.fullName}</td>
+            <td class='p-2 border'>${citizen.email}</td>
+            <td class='p-2 border'>${citizen.walletAddress}</td>
+            <td class='p-2 border'>${citizen.city}</td>
+            <td class='p-2 border'>${citizen.birth}</td>
+            <td class='p-2 border'>${citizen.role}</td>
+            <td class='p-2 border'>
+              <button class='px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition' onclick='deleteCitizen("${citizen._id}")'>حذف</button>
+              <button class='px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition' onclick='viewDocuments("${citizen._id}")'>عرض الوثائق</button>
+
+              </td>
+          </tr>`;
+          citizensTable.innerHTML += row;
+        });
+      })
+      .catch(error => console.error('Error fetching citizens:', error));
+
+      function deleteCitizen(id) {
+  if (!confirm("هل أنت متأكد من أنك تريد حذف هذا المواطن؟")) {
+    return;
+  }
+
+  fetch(`http://localhost:5000/api/auth/citizens/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    alert(data.message); // إظهار رسالة النجاح أو الخطأ
+    location.reload(); // تحديث القائمة بعد الحذف
+  })
+  .catch(error => console.error('Error deleting citizen:', error));
+}
+
+function deleteDocument(documentId) {
+                  fetch(`http://localhost:5000/api/documents/${documentId}`, {
+                    method: 'DELETE',
+                  })
+                    .then(response => response.json())
+                    .then(data => {
+                      alert('تم حذف الوثيقة');
+                      // تحديث الجدول بعد الحذف
+                      render('documents'); // إعادة تحميل الوثائق
+                    })
+                    .catch(error => {
+                      console.error('حدث خطأ أثناء الحذف:', error);
+                      alert('حدث خطأ أثناء حذف الوثيقة');
+                    });
+                }
+     // دالة إرسال الوثيقة
+     function sendDocument(documentId) {
+                        // يمكنك تخصيص وظيفة إرسال الوثيقة هنا
+                        alert(`إرسال الوثيقة ID: ${documentId}`);
+                        // إرسال الوثيقة إلى الجهة المعنية
+                      }
+function deleteRequest(requestId) {
+
+  fetch(`http://localhost:5000/api/requests/${requestId}`, {
+    method: 'DELETE'
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log(data.message);
+    render('requests');
+  })
+  .catch(error => console.error('خطأ مشاهدة الطلب:', error));
+}
+  </script>
+<script src="ad.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+<script>
+  window.onload = () => {
+    function checkAuth() {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        window.location.href = 'login-admin.html'; // إعادة التوجيه إذا لم يكن هناك توكن
+        return;
+      }
+
+      try {
+        // فك التوكن والتحقق من الدور
+        const decoded = jwt_decode(token);
+        if (decoded.role !== 'admin') {
+          window.location.href = 'citizen-wallet.html'; // إعادة التوجيه إلى محفظة المواطن إذا لم يكن "admin"
+          return;
+        }
+
+        // استخراج اسم المسؤول من التوكن وعرضه
+        const adminName = decoded.fullName ;
+        document.getElementById('adminName').textContent = adminName;
+
+      } catch (error) {
+        console.error('خطأ في فك التوكن:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        window.location.href = 'login-admin.html'; // إعادة التوجيه إذا كان هناك خطأ في التوكن
+      }
+    }
+    checkAuth();
+    setInterval(checkAuth, 3000);
+  };
+  // التحقق إذا تم حذف التوكن من localStorage من أي تبويب آخر
+  window.addEventListener("storage", (event) => {
+    if (event.key === "token" && !event.newValue) {
+      window.location.href = "login-admin.html"; // إعادة التوجيه إذا تم حذف التوكن
+    }
+  });
+</script>
+</body>
+</html>

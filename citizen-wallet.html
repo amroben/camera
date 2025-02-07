@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="wallet style.css">
+  <link href='https://fonts.googleapis.com/css?family=Poppins' rel='stylesheet'>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+
+  <title>المحفظة الإلكترونية للمواطن</title>
+
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+          <p style="text-align: center;">Hello, <span class="admin" id="adminName2">Admin</span> 👋</p><br>
+          <i class="fas fa-user user-icon"></i>
+        </div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li><a href="#" data-section="home"><i class="fas fa-home"></i> الرئيسية</a></li>
+                <li><a href="#" data-section="documents"><i class="fas fa-file-alt"></i>  وثائق</a></li>
+                <li><a href="#" data-section="trackdocuments"><i class="fas fa-search"></i> تتبع وثائق</a></li>
+                <li><a href="#" data-section="settings"><i class="fas fa-cog"></i> إعدادات</a></li>
+               <li><a  onclick="logOut()"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</a></li>
+
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+      <div class="mobile-user-info">
+        <i class=" user-icon"><img width="20px" src="image.png"></i>
+          <p style="text-align: center;">مرحبًا،👋 <span  id="adminName">Admin</span> </p><br>
+      </div>
+        <div id="content">
+          <!-- Content will be rendered here -->
+        </div>
+    </main>
+</div>
+<nav class="bottom-nav">
+    <ul>
+        <li><a href="#" data-section="documents"><i class="fas fa-file-alt"></i><span> </span></a></li>
+        <li><a href="#" data-section="trackdocuments"><i class="fas fa-search"></i><span> </span></a></li>
+        <li><a style="background-color: #4154f1; border-radius: 45px; color: #ececec;" href="#" data-section="home"><i class="fas fa-home"></i><span></span></a></li>
+        <li><a href="#" data-section="settings"><i class="fas fa-cog"></i><span></span></a></li>
+        <li><a  onclick="logOut()"><i class="fas fa-sign-out-alt"></i> </a></li>
+    </ul>
+</nav>
+
+<!-- نافذة مسح QR -->
+<div id="qrScannerPopup" class="popup" style="display: none;">
+  <div class="popup-content">
+    <span class="close-btn" id="closeQrScanner">&times;</span>
+    <h3>مسح QR</h3>
+    <div id="qrScanner"></div> <!-- هنا سيتم عرض الكاميرا -->
+  </div>
+</div>
+<div id="cameraPermissionInstructions" class="permission-instructions" style="display: none;">
+  <h4>تمكين الكاميرا</h4>
+  <ol>
+    <li>انقر على أيقونة القفل/الكاميرا في شريط العنوان</li>
+    <li>اختر "السماح" للكاميرا</li>
+    <li>قم بتحديث الصفحة وحاول مرة أخرى</li>
+  </ol>
+</div>
+<script src="script.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+<script>
+  function    logOut() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      window.location.href = 'login-admin.html';
+    }
+  window.onload = () => {
+  function checkAuth() {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      window.location.href = 'login-admin.html'; // إعادة التوجيه إذا لم يكن هناك توكن
+      return;
+    }
+
+    try {
+      // فك التوكن والتحقق من الدور
+      const decoded = jwt_decode(token);
+      if (decoded.role !== 'citizen') {
+        window.location.href = 'dashboard.html'; // إعادة التوجيه إلى محفظة المواطن إذا لم يكن "admin"
+      }
+         // استخراج اسم المسؤول من التوكن وعرضه
+         const adminName = decoded.fullName ;
+         document.getElementById('adminName').textContent = adminName;
+         document.getElementById('adminName2').textContent = adminName;
+
+    } catch (error) {
+      console.error('خطأ في فك التوكن:', error);
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      window.location.href = 'login-admin.html'; // إعادة التوجيه إذا كان هناك خطأ في التوكن
+    }
+  }
+  checkAuth();
+  setInterval(checkAuth, 3000);
+};
+window.addEventListener("storage", (event) => {
+    if (event.key === "token" && !event.newValue) {
+      window.location.href = "login-admin.html"; // إعادة التوجيه إذا تم حذف التوكن
+    }
+  });
+</script>
+</body>
+</html>
