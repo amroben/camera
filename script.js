@@ -166,7 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
       alert(`تم إرسال الوثيقة ${id}`)
     },
 
- 
+
   }
 
   // Add event listeners to navigation links
@@ -372,7 +372,7 @@ async function openQrScanner() {
           const walletAddressInput = document.getElementById("recipientWalletAddress")
           if (walletAddressInput) {
             walletAddressInput.value = decodedText
-           
+            
             closeQrScannerPopup()
           } else {
             console.error("Wallet address input not found")
@@ -409,17 +409,23 @@ function scanRecipientQRCode() {
 }
 
 function sendSelectedDocument(event) {
-  event.preventDefault()
+  event.preventDefault();
 
-  const address = document.getElementById("recipientWalletAddress").value
-  const selectedDoc = document.getElementById("selectDocumentToSend").value
+  // الحصول على عنصر الإدخال مباشرة
+  const addressInput = document.getElementById("recipientWalletAddress");
+  const selectedDoc = document.getElementById("selectDocumentToSend").value;
 
-  if (!address || !selectedDoc) {
-    alert("يرجى إدخال عنوان المحفظة واختيار وثيقة!")
-    return
+  if (!addressInput.value || !selectedDoc) {
+    alert("يرجى إدخال عنوان المحفظة واختيار وثيقة!");
+    return;
   }
-  alert(`تم إرسال "${selectedDoc}" إلى العنوان: ${address}`)
-  closeSendDocumentPopup()
+
+  alert(`تم إرسال "${selectedDoc}" إلى العنوان: ${addressInput.value}`);
+
+  // تفريغ حقل العنوان مباشرة
+  addressInput.value = "";
+
+  closeSendDocumentPopup();
 }
 
 const qrScannerPopup = document.getElementById("qrScannerPopup")
