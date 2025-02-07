@@ -160,4 +160,139 @@ function showQRCodeAndCopy() {
     alert("تم نسخ العنوان إلى الحافظة!");
   });
 
-  document.querySelector("#pop
+  document.querySelector("#popup .close-btn").addEventListener("click", () => {
+    popup.style.display = "none";
+    qrCodeContainer.innerHTML = "";
+  });
+}
+
+async function openQrScanner() {
+  try {
+    // Cleanup previous scanner instance
+    if (qrScannerInstance?.isScanning) await qrScannerInstance.stop();
+    
+    const qrScannerPopup = document.getElementById("qrScannerPopup");
+    qrScannerPopup.style.display = "block";
+    
+    qrScannerInstance = new Html5Qrcode("qrScanner");
+    const cameras = await Html5Qrcode.getCameras();
+    
+    if (cameras.length > 0) {
+      await qrScannerInstance.start(
+        cameras[cameras.length - 1].id,
+        { 
+          fps: 10, 
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0
+        },
+        decodedText => {
+          document.getElementById("recipientWalletAddress").value = decodedText;
+          closeQrScannerPopup();
+        },
+        error => {
+          // Handle specific error messages
+          if (error?.message !== "NotFoundException: No MultiFormat Readers were able to detect the code.") {
+            console.log('QR Scanner error:', error);
+          }
+        }
+      );
+    }
+  } catch (error) {
+    console.error('Scanner error:', error);
+    closeQrScannerPopup();
+    alert(`خطأ في الماسح: ${error.message}`);
+  }
+}
+
+async function closeQrScannerPopup() {
+  try {
+    if (qrScannerInstance?.isScanning) {
+      await qrScannerInstance.stop();
+      qrScannerInstance = null;
+    }
+    document.getElementById("qrScannerPopup").style.display = "none";
+    document.getElementById("qrScanner").innerHTML = "";
+  } catch (err) {
+    console.error('Error stopping scanner:', err);
+  }
+}
+
+function scanRecipientQRCode() {
+  const message = `
+    لإجراء مسح ناجح:
+    1. تأكد من وجود إضاءة كافية
+    2. ضع رمز QR داخل الإطار
+    3. حافظ على مسافة مناسبة (20-50 سم)
+    4. تجنب الزوايا المائلة
+  `;
+  
+  if (confirm(message)) {
+    openQrScanner().catch(error => {
+      alert("تعذر فتح الماسح: " + error.message);
+    });
+  }
+}
+
+function sendSelectedDocument(event) {
+  event.preventDefault();
+  const addressInput = document.getElementById("recipientWalletAddress");
+  const docSelect = document.getElementById("selectDocumentToSend");
+  
+  if (!addressInput.value || !docSelect.value) {
+    alert("يرجى إدخال عنوان المحفظة واختيار وثيقة!");
+    return;
+  }
+  
+  alert(`تم إرسال "${docSelect.value}" إلى العنوان: ${addressInput.value}`);
+  addressInput.value = "";
+  docSelect.selectedIndex = 0;
+  closeSendDocumentPopup();
+}
+
+// Document Request Handling
+document.getElementById("requestDocsBtn")?.addEventListener("click", () => {
+  document.getElementById("requestPopup").style.display = "block";
+});
+
+document.querySelector("#requestPopup .close-btn")?.addEventListener("click", () => {
+  document.getElementById("requestPopup").style.display = "none";
+});
+
+document.getElementById("submitRequest")?.addEventListener("click", async () => {
+  const requestType = document.getElementById("documentType").value;
+  try {
+    const response = await fetch("http://localhost:5000/api/requests", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token")}`
+      },
+      body: JSON.stringify({ requestType })
+    });
+    
+    const data = await response.json();
+    alert(response.ok ? "تم إرسال الطلب بنجاح!" : "حدث خطأ: " + data.message);
+    document.getElementById("requestPopup").style.display = "none";
+  } catch (error) {
+    console.error("خطأ في إرسال الطلب:", error);
+    alert("حدث خطأ أثناء الإرسال");
+  }
+});
+
+// General Functions
+function openSendDocumentPopup() {
+  document.getElementById("sendDocumentPopup").style.display = "block";
+  loadUserDocuments();
+}
+
+function closeSendDocumentPopup() {
+  document.getElementById("sendDocumentPopup").style.display = "none";
+}
+
+function loadUserDocuments() {
+  const select = document.getElementById("selectDocumentToSend");
+  select.innerHTML = '<option value="">اختر وثيقة</option>';
+  ["شهادة ميلاد", "شهادة إقامة", "تصريح شرفي", "شهادة عمل"].forEach(doc => {
+    select.innerHTML += `<option value="${doc}">${doc}</option>`;
+  });
+}
