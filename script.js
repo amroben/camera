@@ -280,19 +280,82 @@ document.getElementById("submitRequest")?.addEventListener("click", async () => 
 });
 
 // General Functions
+function openRequestPopup() {
+  const requestPopup = document.querySelector("#requestPopup")
+  const closeBtn = requestPopup.querySelector(".close-btn")
+  const submitRequestBtn = requestPopup.querySelector("#submitRequest")
+
+  requestPopup.style.display = "block"
+
+  closeBtn.addEventListener("click", hidePopup)
+
+  requestPopup.addEventListener("click", (e) => {
+    if (e.target === requestPopup) hidePopup()
+  })
+
+  submitRequestBtn.removeEventListener("click", handleSubmitRequest)
+  submitRequestBtn.addEventListener("click", handleSubmitRequest, { once: true })
+}
+
+function hidePopup() {
+  document.querySelector("#requestPopup").style.display = "none"
+}
+
+function handleSubmitRequest() {
+  const requestType = document.querySelector("#documentType").value
+  submitRequest(requestType)
+  hidePopup()
+}
+
+async function submitRequest(requestType) {
+  const token = localStorage.getItem("token")
+
+  if (!token) {
+    alert("يرجى تسجيل الدخول أولاً")
+    return
+  }
+
+  try {
+    const response = await fetch("http://localhost:5000/api/requests", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ requestType }),
+    })
+
+    const data = await response.json()
+
+    if (response.ok) {
+      alert("تم إرسال الطلب بنجاح!")
+    } else {
+      alert("حدث خطأ أثناء إرسال الطلب: " + data.message)
+    }
+  } catch (error) {
+    console.error("خطأ في إرسال الطلب:", error)
+    alert("حدث خطأ أثناء إرسال الطلب")
+  }
+}
+
 function openSendDocumentPopup() {
-  document.getElementById("sendDocumentPopup").style.display = "block";
-  loadUserDocuments();
+  const popup = document.getElementById("sendDocumentPopup")
+  popup.style.display = "block"
+  loadUserDocuments()
 }
 
 function closeSendDocumentPopup() {
-  document.getElementById("sendDocumentPopup").style.display = "none";
+  document.getElementById("sendDocumentPopup").style.display = "none"
 }
 
 function loadUserDocuments() {
-  const select = document.getElementById("selectDocumentToSend");
-  select.innerHTML = '<option value="">اختر وثيقة</option>';
-  ["شهادة ميلاد", "شهادة إقامة", "تصريح شرفي", "شهادة عمل"].forEach(doc => {
-    select.innerHTML += `<option value="${doc}">${doc}</option>`;
-  });
+  const documentSelect = document.getElementById("selectDocumentToSend")
+  documentSelect.innerHTML = '<option value="">Documents </option>'
+  const userDocuments = ["شهادة ميلاد", "شهادة إقامة", "تصريح شرفي", "شهادة عمل"]
+  userDocuments.forEach((doc) => {
+    const option = document.createElement("option")
+    option.value = doc
+    option.textContent = doc
+    documentSelect.appendChild(option)
+  })
 }
