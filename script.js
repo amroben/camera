@@ -372,7 +372,7 @@ async function openQrScanner() {
           const walletAddressInput = document.getElementById("recipientWalletAddress")
           if (walletAddressInput) {
             walletAddressInput.value = decodedText
-            alert("تم مسح QR بنجاح!")
+           
             closeQrScannerPopup()
           } else {
             console.error("Wallet address input not found")
