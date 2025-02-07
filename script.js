@@ -1,3 +1,53 @@
+// أضف هذا في أعلى الملف خارج أي دالة
+let qrScannerInstance = null;
+
+document.addEventListener("DOMContentLoaded", () => {
+  // ... (الكود الأصلي دون تغيير)
+});
+
+async function openQrScanner() {
+  try {
+    if (qrScannerInstance && qrScannerInstance.isScanning) {
+      await qrScannerInstance.stop();
+    }
+    
+    const qrScannerPopup = document.getElementById("qrScannerPopup");
+    qrScannerPopup.style.display = "block";
+    
+    qrScannerInstance = new Html5Qrcode("qrScanner");
+    const cameras = await Html5Qrcode.getCameras();
+    
+    if (cameras.length > 0) {
+      await qrScannerInstance.start(
+        cameras[cameras.length - 1].id,
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        decodedText => {
+          document.getElementById("recipientWalletAddress").value = decodedText;
+          closeQrScannerPopup();
+        },
+        error => console.log('QR Scanner error:', error)
+      );
+    }
+  } catch (error) {
+    console.error('Scanner error:', error);
+    closeQrScannerPopup();
+  }
+}
+
+async function closeQrScannerPopup() {
+  try {
+    if (qrScannerInstance && qrScannerInstance.isScanning) {
+      await qrScannerInstance.stop();
+      qrScannerInstance = null;
+    }
+    document.getElementById("qrScannerPopup").style.display = "none";
+    document.getElementById("qrScanner").innerHTML = "";
+  } catch (err) {
+    console.error('Error stopping scanner:', err);
+  }
+}
+
+// بقية الدوال كما هي...
 document.addEventListener("DOMContentLoaded", () => {
   const navLinks = document.querySelectorAll("[data-section]");
   const content = document.getElementById("content");
